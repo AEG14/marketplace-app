@@ -1,34 +1,29 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import { supabase } from '@/lib/supabaseClient';
 import Button from '@/components/ui/Button';
-
-const defaultPreviewImg =
-  'data:image/svg+xml;utf8,<svg width="600" height="400" xmlns="http://www.w3.org/2000/svg"><rect fill="%23e0e7ef" width="600" height="400"/><path d="M0 0L600 400M600 0L0 400" stroke="%2399b6e7" stroke-width="6" stroke-dasharray="12,12"/></svg>';
 
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-const mockListing = {
-  photoUrl: defaultPreviewImg,
-  title: 'abcd',
-  price: 200,
-  location: 'Palo Alto, CA',
-  description: 'esrdtfyguhisrtdyfugihtrdyfui67t8yihhsfdxgchvj76rtyfgh',
-  sellerEmail: 'avich710@gmail.com',
-  sellerName: 'Wei Gu',
-  listedAgo: '1 hour ago',
-  category: 'Electronics',
-};
-
 export default function ListingDetail() {
+  const { id } = useParams() as { id: string };
+  const [listing, setListing] = useState<any>(null);
   const [buyerEmail, setBuyerEmail] = useState('');
   const [message, setMessage] = useState("I'm interested in your item!");
   const [errors, setErrors] = useState<{ email?: string; message?: string }>({});
   const [sent, setSent] = useState(false);
 
-  const handleSend = (e: React.FormEvent) => {
+  useEffect(() => {
+    supabase.from('listings').select('*').eq('id', id).single().then(({ data }) => {
+      setListing(data);
+    });
+  }, [id]);
+
+  const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors: typeof errors = {};
     if (!buyerEmail) newErrors.email = 'Your email is required.';
@@ -36,40 +31,65 @@ export default function ListingDetail() {
     if (!message.trim()) newErrors.message = 'Message cannot be empty.';
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
+  
+    // Store message in Supabase
+    await supabase.from('messages').insert([
+      {
+        listing_id: id,
+        buyer_email: buyerEmail,
+        seller_email: listing.seller_email,
+        message,
+      },
+    ]);
+  
+    // Trigger email to seller via Supabase Edge Function
+    await supabase.functions.invoke('send-email', {
+      body: {
+        to: listing.seller_email,
+        subject: `New message about your listing: ${listing.title}`,
+        message,
+        listingTitle: listing.title,
+        fromEmail: buyerEmail,
+        fromName: buyerEmail,
+      }
+    });
+  
     setSent(true);
     setTimeout(() => setSent(false), 2000);
   };
 
+  if (!listing) return <div>Loading...</div>;
+
   return (
-    <div className="flex flex-col md:flex-row gap-6 w-full max-w-6xl mx-auto mt-2 p-2 md:p-4">
+    <div className="flex flex-col md:flex-row gap-6 w-full max-w-6xl mx-auto mt-2 p-2 md:p-4 items-start">
       {/* Image Preview */}
       <div className="flex-1 bg-gray-50 rounded-xl border border-gray-200 flex items-center justify-center p-2 md:p-4">
         <img
-          src={mockListing.photoUrl}
-          alt={mockListing.title}
+          src={listing.image_url}
+          alt={listing.title}
           className="object-cover w-full h-full rounded-lg max-h-[380px]"
         />
       </div>
       {/* Details and Message */}
       <div className="w-full md:w-[370px] flex flex-col gap-4">
         <div>
-          <div className="font-bold text-xl md:text-2xl mb-0.5">{mockListing.title}</div>
-          <div className="text-lg text-gray-900 font-semibold mb-1">${mockListing.price}</div>
+          <div className="font-bold text-xl md:text-2xl mb-0.5">{listing.title}</div>
+          <div className="text-lg text-gray-900 font-semibold mb-1">${listing.price}</div>
           <div className="text-xs text-gray-500 mb-0.5">
-            Listed {mockListing.listedAgo}
-            <span className="text-gray-700"> in {mockListing.location}</span>
+            Listed {new Date(listing.created_at).toLocaleString()}
+            <span className="text-gray-700"> in {listing.location}</span>
           </div>
           <div className="text-xs text-gray-500 mb-1">
-            Category: <span className="text-gray-700">{mockListing.category}</span>
+            Category: <span className="text-gray-700">{listing.category}</span>
           </div>
         </div>
         <div>
           <div className="font-semibold mb-0.5 text-sm">Description</div>
-          <div className="text-gray-700 text-sm">{mockListing.description}</div>
+          <div className="text-gray-700 text-sm">{listing.description}</div>
         </div>
         <div>
           <div className="font-semibold mb-0.5 text-sm">Seller Information</div>
-          <div className="text-gray-800 text-sm">{mockListing.sellerEmail}</div>
+          <div className="text-gray-800 text-sm">{listing.seller_email}</div>
         </div>
         <form
           onSubmit={handleSend}

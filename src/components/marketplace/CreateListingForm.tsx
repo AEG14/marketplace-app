@@ -2,6 +2,8 @@
 
 import { useState, ChangeEvent } from 'react';
 import Button from '@/components/ui/Button';
+import { supabase } from '@/lib/supabaseClient';
+
 
 const defaultPreviewImg =
   'data:image/svg+xml;utf8,<svg width="600" height="400" xmlns="http://www.w3.org/2000/svg"><rect fill="%23e0e7ef" width="600" height="400"/><path d="M0 0L600 400M600 0L0 400" stroke="%2399b6e7" stroke-width="6" stroke-dasharray="12,12"/></svg>';
@@ -34,7 +36,7 @@ export default function CreateListingForm() {
     setPhotoUrl(defaultPreviewImg);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors: { [key: string]: string } = {};
 
@@ -54,8 +56,36 @@ export default function CreateListingForm() {
 
     if (Object.keys(newErrors).length > 0) return;
 
-    // Submit logic here
-    alert('Listing created!');
+    let imageUrl = '';
+  if (photo) {
+    const fileExt = photo.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+    const { data, error } = await supabase.storage
+      .from('listing-images')
+      .upload(fileName, photo, { cacheControl: '3600', upsert: false });
+    if (error) {
+      setErrors({ photo: 'Failed to upload image.' });
+      return;
+    }
+    imageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/listing-images/${fileName}`;
+  }
+
+  const { error: insertError } = await supabase.from('listings').insert([
+    {
+      title,
+      description,
+      price: Number(price),
+      category,
+      seller_email: email,
+      image_url: imageUrl,
+      location,
+    },
+  ]);
+  if (insertError) {
+    alert('Failed to create listing.');
+    return;
+  }
+  alert('Listing created!');
   };
 
   return (

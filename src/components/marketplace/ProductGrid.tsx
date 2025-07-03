@@ -1,25 +1,33 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import ProductCard from './ProductCard';
 
 interface ProductGridProps {
   category?: string;
+  search?: string;
 }
 
-const products = Array.from({ length: 12 }).map((_, i) => ({
-  id: i,
-  price: 2300,
-  title: 'Lorem ipsum dolor sit',
-  location: 'Palo Alto, CA',
-}));
+export default function ProductGrid({ category, search }: ProductGridProps) {
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-export default function ProductGrid({ category }: ProductGridProps) {
-  // Filter products by category if provided
-  const filteredProducts = category 
-    ? products.filter(() => true) // Add actual filtering logic here
-    : products;
+  useEffect(() => {
+    let query = supabase.from('listings').select('*').order('created_at', { ascending: false });
+    if (category) query = query.eq('category', category);
+    if (search) query = query.ilike('title', `%${search}%`);
+    query.then(({ data }) => {
+      setProducts(data || []);
+      setLoading(false);
+    });
+  }, [category, search]);
+
+  if (loading) return <div>Loading...</div>;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-      {filteredProducts.map((product) => (
+      {products.map((product) => (
         <ProductCard key={product.id} {...product} />
       ))}
     </div>
