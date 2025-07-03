@@ -7,11 +7,14 @@ import {
   HiOutlineUserCircle,
 } from 'react-icons/hi';
 import { useState } from 'react';
+import { Toaster } from 'sonner';
 
 export default function MarketplaceLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
+    <>  
+    <Toaster />
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
       <header className="flex items-center justify-between gap-4 p-4 border-b bg-white sticky top-0 z-30">
@@ -79,5 +82,6 @@ export default function MarketplaceLayout({ children }: { children: React.ReactN
         </main>
       </div>
     </div>
+    </>
   );
 }

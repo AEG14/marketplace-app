@@ -3,6 +3,7 @@
 import { useState, ChangeEvent } from 'react';
 import Button from '@/components/ui/Button';
 import { supabase } from '@/lib/supabaseClient';
+import { toast } from 'sonner';
 
 
 const defaultPreviewImg =
@@ -22,6 +23,8 @@ export default function CreateListingForm() {
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string>(defaultPreviewImg);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [loading, setLoading] = useState(false);
+
 
   const handlePhotoChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -55,38 +58,46 @@ export default function CreateListingForm() {
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length > 0) return;
+    setLoading(true);
+  let imageUrl = '';
+  try {
+    if (photo) {
+      const fileExt = photo.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const { error } = await supabase.storage
+        .from('listing-images')
+        .upload(fileName, photo, { cacheControl: '3600', upsert: false });
+      if (error) {
+        setErrors({ photo: 'Failed to upload image.' });
+        setLoading(false);
+        return;
+      }
+      imageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/listing-images/${fileName}`;
+    }
 
-    let imageUrl = '';
-  if (photo) {
-    const fileExt = photo.name.split('.').pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-    const { error } = await supabase.storage
-      .from('listing-images')
-      .upload(fileName, photo, { cacheControl: '3600', upsert: false });
-    if (error) {
-      setErrors({ photo: 'Failed to upload image.' });
+    const { error: insertError } = await supabase.from('listings').insert([
+      {
+        title,
+        description,
+        price: Number(price),
+        category,
+        seller_email: email,
+        image_url: imageUrl,
+        location,
+      },
+    ]);
+    if (insertError) {
+      toast.error('Failed to create listing.');
+      setLoading(false);
       return;
     }
-    imageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/listing-images/${fileName}`;
+    toast.success('Listing created!');
+    // Optionally reset form here
+  } catch (err) {
+    toast.error('Something went wrong. Please try again.');
   }
-
-  const { error: insertError } = await supabase.from('listings').insert([
-    {
-      title,
-      description,
-      price: Number(price),
-      category,
-      seller_email: email,
-      image_url: imageUrl,
-      location,
-    },
-  ]);
-  if (insertError) {
-    alert('Failed to create listing.');
-    return;
-  }
-  alert('Listing created!');
-  };
+  setLoading(false);
+};
 
   return (
    <div className="flex flex-col md:flex-row gap-6 w-full max-w-full min-w-0 overflow-x-auto">
@@ -237,9 +248,9 @@ export default function CreateListingForm() {
             placeholder="Describe your item..."
           />
         </div>
-        <Button type="submit" className="w-full mt-2">
-          Create Listing
-        </Button>
+        <Button type="submit" className="w-full mt-2" loading={loading}>
+        {loading ? 'Creating...' : 'Create Listing'}
+      </Button>
       </form>
 
       {/* Preview */}

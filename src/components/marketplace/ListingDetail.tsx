@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import Button from '@/components/ui/Button';
+import { toast } from 'sonner';
 
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -17,10 +18,14 @@ export default function ListingDetail() {
   const [message, setMessage] = useState("I'm interested in your item!");
   const [errors, setErrors] = useState<{ email?: string; message?: string }>({});
   const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
+    setLoading(true);
     supabase.from('listings').select('*').eq('id', id).single().then(({ data }) => {
       setListing(data);
+      setLoading(false);
     });
   }, [id]);
 
@@ -32,44 +37,82 @@ export default function ListingDetail() {
     if (!message.trim()) newErrors.message = 'Message cannot be empty.';
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
-  
-    // Store message in Supabase
-    await supabase.from('messages').insert([
-      {
-        listing_id: id,
-        buyer_email: buyerEmail,
-        seller_email: listing.seller_email,
-        message,
-      },
-    ]);
-  
-    // Trigger email to seller via Supabase Edge Function
-    await supabase.functions.invoke('send-email', {
-      body: {
-        to: listing.seller_email,
-        subject: `New message about your listing: ${listing.title}`,
-        message,
-        listingTitle: listing.title,
-        fromEmail: buyerEmail,
-        fromName: buyerEmail,
-      }
-    });
-  
-    setSent(true);
-    setTimeout(() => setSent(false), 2000);
+
+    setSending(true);
+    try {
+      // Store message in Supabase
+      const { error: msgError } = await supabase.from('messages').insert([
+        {
+          listing_id: id,
+          buyer_email: buyerEmail,
+          seller_email: listing.seller_email,
+          message,
+        },
+      ]);
+      if (msgError) throw new Error('Failed to send message.');
+
+      // Trigger email to seller via Supabase Edge Function
+      const { error: fnError } = await supabase.functions.invoke('send-email', {
+        body: {
+          to: listing.seller_email,
+          subject: `New message about your listing: ${listing.title}`,
+          message,
+          listingTitle: listing.title,
+          fromEmail: buyerEmail,
+          fromName: buyerEmail,
+        }
+      });
+      if (fnError) throw new Error('Failed to send email.');
+
+      toast.success('Message sent to seller!');
+      setSent(true);
+      setBuyerEmail('');
+      setMessage("I'm interested in your item!");
+      setTimeout(() => setSent(false), 2000);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to send message.');
+    }
+    setSending(false);
   };
 
-  if (!listing) return <div>Loading...</div>;
+  if (loading) {
+    // Skeleton for detail page
+    return (
+      <div className="flex flex-col md:flex-row gap-6 w-full max-w-6xl mx-auto mt-2 p-2 md:p-4 items-start">
+        <div className="flex-1 bg-gray-100 rounded-xl border border-gray-200 flex items-center justify-center p-2 md:p-4 animate-pulse min-h-[380px]" />
+        <div className="w-full md:w-[370px] flex flex-col gap-4">
+          <div className="h-8 bg-gray-100 rounded w-2/3 mb-2 animate-pulse" />
+          <div className="h-6 bg-gray-100 rounded w-1/3 mb-2 animate-pulse" />
+          <div className="h-4 bg-gray-100 rounded w-1/2 mb-2 animate-pulse" />
+          <div className="h-4 bg-gray-100 rounded w-1/2 mb-2 animate-pulse" />
+          <div className="h-20 bg-gray-100 rounded w-full mb-2 animate-pulse" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!listing) return (
+    <div className="flex flex-col items-center justify-center py-24 w-full">
+      <div className="text-2xl font-semibold mb-2">Listing not found</div>
+      <div className="text-gray-500 mb-4">This item may have been removed.</div>
+    </div>
+  );
 
   return (
     <div className="flex flex-col md:flex-row gap-6 w-full max-w-6xl mx-auto mt-2 p-2 md:p-4 items-start">
       {/* Image Preview */}
-      <div className="flex-1 bg-gray-50 rounded-xl border border-gray-200 flex items-center justify-center p-2 md:p-4">
-        <img
-          src={listing.image_url}
-          alt={listing.title}
-          className="object-cover w-full h-full rounded-lg max-h-[380px]"
-        />
+      <div className="flex-1 bg-gray-50 rounded-xl border border-gray-200 flex items-center justify-center p-2 md:p-4 min-h-[380px]">
+        {listing.image_url ? (
+          <img
+            src={listing.image_url}
+            alt={listing.title}
+            className="object-cover w-full h-full rounded-lg max-h-[380px]"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-gray-400">
+            <span>No image</span>
+          </div>
+        )}
       </div>
       {/* Details and Message */}
       <div className="w-full md:w-[370px] flex flex-col gap-4">
@@ -108,6 +151,7 @@ export default function ListingDetail() {
             onChange={e => setBuyerEmail(e.target.value)}
             className={`w-full px-3 py-1.5 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm ${errors.email ? 'border-red-400' : ''}`}
             required
+            disabled={sending}
           />
           {errors.email && <div className="text-xs text-red-500">{errors.email}</div>}
           <label htmlFor="buyer-message" className="text-xs font-medium mt-1 mb-0.5">
@@ -119,12 +163,14 @@ export default function ListingDetail() {
             value={message}
             onChange={e => setMessage(e.target.value)}
             required
+            disabled={sending}
           />
           {errors.message && <div className="text-xs text-red-500">{errors.message}</div>}
           <Button
             type="submit"
             className="w-full mt-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded transition-colors text-sm"
-            disabled={sent}
+            disabled={sent || sending}
+            loading={sending}
           >
             {sent ? 'Message Sent!' : 'Send Message'}
           </Button>
