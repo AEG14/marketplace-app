@@ -82,28 +82,29 @@ export default function Sidebar() {
 
 
         {/* Categories section */}
-        <div>
-          <h2 className="font-semibold mb-2 text-gray-900 text-sm px-2 uppercase tracking-wide">Categories</h2>
-          <nav className="space-y-1">
-            {categories.map((cat) => {
-              const catHref = `/marketplace/category/${encodeURIComponent(cat)}`;
-              const active = isActive(catHref);
-              return (
-                <Link
-                  key={cat}
-                  href={catHref}
-                  className={`block py-2 px-4 rounded-lg text-xs transition-colors ${
-                    active
-                      ? 'bg-blue-100 text-blue-700 font-medium'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                  }`}
-                >
-                  {cat}
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
+    <div>
+      <h2 className="font-semibold mb-2 text-gray-900 text-sm px-2 uppercase tracking-wide">Categories</h2>
+      <nav className="space-y-1">
+        {categories.map((category) => {
+          // Use category.value for the href and category.label for the displayed text
+          const catHref = `/marketplace/category/${encodeURIComponent(category.value)}`;
+          const active = isActive(catHref);
+          return (
+            <Link
+              key={category.value} // Use category.value as the key since it's unique
+              href={catHref}
+              className={`block py-2 px-4 rounded-lg text-xs transition-colors ${
+                active
+                  ? 'bg-blue-100 text-blue-700 font-medium'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+              }`}
+            >
+              {category.label} {/* Display the human-readable label */}
+            </Link>
+          );
+        })}
+      </nav>
+    </div>
       </div>
     </aside>
   );
