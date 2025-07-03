@@ -69,7 +69,7 @@ export default function Sidebar() {
             }`}
             style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}
           >
-            <span className="relative z-10">Today's Picks</span>
+            <span className="relative z-10">Today&apos;s picks</span>
             {/* Brighter Shimmer/Wave effect */}
             <span
               className="absolute left-0 top-0 h-full w-full pointer-events-none"

@@ -9,8 +9,16 @@ interface ProductGridProps {
   search?: string;
 }
 
+type Listing = {
+  id: string;
+  price: number;
+  title: string;
+  location: string;
+  image_url?: string;
+  // add other fields as needed
+};
 export default function ProductGrid({ category, search }: ProductGridProps) {
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
