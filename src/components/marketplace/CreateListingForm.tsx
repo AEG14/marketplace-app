@@ -59,11 +59,11 @@ export default function CreateListingForm() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row gap-6 w-full">
+   <div className="flex flex-col md:flex-row gap-6 w-full max-w-full min-w-0 overflow-x-auto">
       {/* Form */}
       <form
         onSubmit={handleSubmit}
-        className="bg-gray-50 rounded-xl p-6 flex-1 max-w-md border border-gray-200"
+        className="bg-gray-50 rounded-xl p-6 flex-1 max-w-md w-full border border-gray-200 min-w-0"
       >
         <div className="mb-4">
           <label className="block font-semibold text-gray-800 mb-2">Photos</label>
@@ -213,7 +213,7 @@ export default function CreateListingForm() {
       </form>
 
       {/* Preview */}
-      <div className="flex-1 bg-gray-50 rounded-xl p-6 border border-gray-200 flex flex-col items-center min-w-[320px]">
+      <div className="flex-1 bg-gray-50 rounded-xl p-6 border border-gray-200 flex flex-col items-center min-w-[320px] max-w-full">
         <div className="w-full aspect-video bg-gray-100 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
           <img
             src={photoUrl}

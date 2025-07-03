@@ -17,7 +17,7 @@ export default function Sidebar() {
   const isActive = (href: string) => pathname === href;
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 min-h-screen">
+    <aside className="w-64 md:block bg-white border-r border-gray-200 min-h-screen">
       <div className="p-6 flex flex-col gap-8">
         {/* Create New Listing Section */}
         <div>
