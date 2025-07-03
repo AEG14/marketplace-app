@@ -60,7 +60,7 @@ export default function CreateListingForm() {
   if (photo) {
     const fileExt = photo.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from('listing-images')
       .upload(fileName, photo, { cacheControl: '3600', upsert: false });
     if (error) {

@@ -11,6 +11,7 @@ function isValidEmail(email: string) {
 
 export default function ListingDetail() {
   const { id } = useParams() as { id: string };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [listing, setListing] = useState<any>(null);
   const [buyerEmail, setBuyerEmail] = useState('');
   const [message, setMessage] = useState("I'm interested in your item!");
