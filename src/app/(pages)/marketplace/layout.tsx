@@ -1,4 +1,9 @@
 import Sidebar from '@/components/layout/Sidebar';
+import {
+  HiOutlineMail,
+  HiOutlineBell,
+  HiOutlineUserCircle,
+} from 'react-icons/hi';
 
 export default function MarketplaceLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -12,9 +17,15 @@ export default function MarketplaceLayout({ children }: { children: React.ReactN
           <span className="font-bold text-xl text-gray-900">Marketplace</span>
         </div>
         <div className="flex gap-2">
-          <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
-          <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
-          <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
+          <span className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-blue-100 transition-colors cursor-pointer text-gray-600">
+            <HiOutlineMail size={20} />
+          </span>
+          <span className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-blue-100 transition-colors cursor-pointer text-gray-600">
+            <HiOutlineBell size={20} />
+          </span>
+          <span className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-blue-100 transition-colors cursor-pointer text-gray-600">
+            <HiOutlineUserCircle size={22} />
+          </span>
         </div>
       </header>
       {/* Main content */}

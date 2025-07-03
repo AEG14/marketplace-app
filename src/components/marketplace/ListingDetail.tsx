@@ -15,7 +15,7 @@ export default function ListingDetail() {
         <div>Seller Information<br/>Wei Gu</div>
         <div className="mt-4">
           <div className="mb-2">Send seller a message</div>
-          <textarea className="w-full border rounded p-2 mb-2" defaultValue="I want to buy your bike!" />
+          <textarea className="w-full border rounded p-2 mb-2" defaultValue="Hi, is this available?" />
           <Button className="w-full">Send</Button>
         </div>
       </div>
