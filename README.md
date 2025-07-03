@@ -1,36 +1,104 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Marketplace App
+
+A modern, full-stack marketplace web application built with [Next.js](https://nextjs.org), [Supabase](https://supabase.com), and [Tailwind CSS](https://tailwindcss.com).
+
+**Live Demo:** [https://marketplace-app-ten.vercel.app](https://marketplace-app-ten.vercel.app)
+
+---
+
+## Features
+
+- **Create Listings:** Users can post items for sale with images, categories, price, and location.
+- **Browse & Search:** Responsive grid/listing view with category tabs and instant search.
+- **Listing Detail:** Dedicated page for each item with image, full info, and seller contact.
+- **Message Seller:** Buyers can send messages to sellers; messages are stored in Supabase and trigger an email notification.
+- **Image Upload:** Listing images are uploaded and served via Supabase Storage.
+- **Modern UI/UX:** Clean design, skeleton loaders, toasts for feedback, and empty states for a seamless experience.
+
+---
+
+## Tech Stack
+
+- **Frontend:** Next.js (App Router), React, Tailwind CSS
+- **Backend:** Supabase (Database, Auth, Storage, Edge Functions)
+- **Email:** Resend via Supabase Edge Function
+- **Deployment:** Vercel
+
+---
 
 ## Getting Started
 
-First, run the development server:
+1. **Clone the repo:**
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+   ```bash
+   git clone https://github.com/AEG14/marketplace-app.git
+   cd marketplace-app
+   ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. **Install dependencies:**
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3. **Set up environment variables:**
 
-## Learn More
+   - Copy `.env.local.example` to `.env.local` and fill in your Supabase project credentials.
 
-To learn more about Next.js, take a look at the following resources:
+4. **Run the development server:**
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+5. **Open [http://localhost:3000](http://localhost:3000) in your browser.**
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Project Structure
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `src/app/` — Next.js App Router pages
+- `src/components/marketplace/` — Marketplace UI components (ProductGrid, ProductCard, CreateListingForm, etc.)
+- `src/components/ui/` — Reusable UI components (Button, etc.)
+- `src/lib/` — Utility files (Supabase client, categories, etc.)
+
+---
+
+## Database Schema
+
+- **listings:** Stores all marketplace items (title, description, price, category, seller_email, image_url, etc.)
+- **messages:** Stores messages sent from buyers to sellers.
+- **Supabase Storage:** For listing images.
+
+---
+
+## Email Messaging
+
+- When a buyer sends a message, it is stored in Supabase and an email is sent to the seller using a Supabase Edge Function and Resend.
+
+---
+
+## Customization
+
+- **Categories:** Edit `src/lib/categories.ts` to add or change marketplace categories.
+- **Styling:** Uses Tailwind CSS for rapid UI changes.
+- **Edge Functions:** See `supabase/functions/send-email` for email logic.
+
+---
+
+## Demo
+
+Try the live demo:  
+👉 [https://marketplace-app-ten.vercel.app](https://marketplace-app-ten.vercel.app)
+
+---
+
+## License
+
+MIT
+
+---
