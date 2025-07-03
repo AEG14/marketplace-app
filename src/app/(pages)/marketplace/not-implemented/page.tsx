@@ -1,8 +1,16 @@
 'use client';
-
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 export default function NotImplementedPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <NotImplementedContent />
+    </Suspense>
+  );
+}
+
+function NotImplementedContent() {
   const params = useSearchParams();
   const feature = params.get('feature');
 
