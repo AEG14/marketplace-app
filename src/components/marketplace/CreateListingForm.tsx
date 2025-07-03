@@ -93,9 +93,9 @@ export default function CreateListingForm() {
     }
     toast.success('Listing created!');
     // Optionally reset form here
-    } catch (error: any) {
+    } catch (error) {
     console.error('Error creating listing:', error);
-    toast.error(error.message || 'Something went wrong. Please try again.');
+    toast.error('Something went wrong. Please try again.');
     }
   setLoading(false);
 };
