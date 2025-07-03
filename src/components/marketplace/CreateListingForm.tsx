@@ -93,7 +93,7 @@ export default function CreateListingForm() {
     }
     toast.success('Listing created!');
     // Optionally reset form here
-  } catch (err) {
+  } catch (_) {
     toast.error('Something went wrong. Please try again.');
   }
   setLoading(false);

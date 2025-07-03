@@ -6,14 +6,27 @@ import { supabase } from '@/lib/supabaseClient';
 import Button from '@/components/ui/Button';
 import { toast } from 'sonner';
 
+type Listing = {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  category: string;
+  seller_email: string;
+  image_url?: string;
+  location: string;
+  created_at: string;
+  // add other fields as needed
+};
+
+
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 export default function ListingDetail() {
   const { id } = useParams() as { id: string };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [listing, setListing] = useState<any>(null);
+  const [listing, setListing] = useState<Listing | null>(null);
   const [buyerEmail, setBuyerEmail] = useState('');
   const [message, setMessage] = useState("I'm interested in your item!");
   const [errors, setErrors] = useState<{ email?: string; message?: string }>({});
@@ -31,13 +44,17 @@ export default function ListingDetail() {
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!listing) {
+      toast.error('Listing not loaded.');
+      return;
+    }
     const newErrors: typeof errors = {};
     if (!buyerEmail) newErrors.email = 'Your email is required.';
     else if (!isValidEmail(buyerEmail)) newErrors.email = 'Enter a valid email address.';
     if (!message.trim()) newErrors.message = 'Message cannot be empty.';
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
-
+  
     setSending(true);
     try {
       // Store message in Supabase
@@ -50,7 +67,7 @@ export default function ListingDetail() {
         },
       ]);
       if (msgError) throw new Error('Failed to send message.');
-
+  
       // Trigger email to seller via Supabase Edge Function
       const { error: fnError } = await supabase.functions.invoke('send-email', {
         body: {
@@ -63,14 +80,18 @@ export default function ListingDetail() {
         }
       });
       if (fnError) throw new Error('Failed to send email.');
-
+  
       toast.success('Message sent to seller!');
       setSent(true);
       setBuyerEmail('');
       setMessage("I'm interested in your item!");
       setTimeout(() => setSent(false), 2000);
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to send message.');
+    } catch (err: unknown) {
+      const errorMsg =
+        typeof err === 'object' && err && 'message' in err
+          ? String((err as { message?: string }).message)
+          : 'Failed to send message.';
+      toast.error(errorMsg);
     }
     setSending(false);
   };

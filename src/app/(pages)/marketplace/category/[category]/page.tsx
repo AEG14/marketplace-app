@@ -4,7 +4,6 @@ import { useParams } from 'next/navigation';
 import { useState } from 'react';
 import ProductGrid from '@/components/marketplace/ProductGrid';
 import SearchBar from '@/components/ui/SearchBar';
-import { categories } from '@/lib/categories';
 
 function prettifyCategory(category: string) {
   return decodeURIComponent(category)
